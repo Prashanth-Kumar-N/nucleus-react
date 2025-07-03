@@ -89,55 +89,6 @@ export const FileList = () => {
     );
   }
 
-  /* return (
-    <Box component="ul" className="flex">
-      {files.map((file) => {
-        return (
-          <Card
-            component="li"
-            className="w-1/3 md:w-1/4 m-3 min-h-20 md:min-h-36"
-          >
-            <CardOverflow>
-              <AspectRatio>
-                <img
-                  src={getFileImage(file.Name)}
-                  srcSet={getFileImage(file.Name)}
-                  loading="lazy"
-                  alt=""
-                />
-              </AspectRatio>
-            </CardOverflow>
-            <CardContent
-              className=" flex-col items-start justify-end pt-5 -m-2"
-              sx={{ rowGap: 0 }}
-            >
-              <Tooltip title={file.Name}>
-                <Link
-                  overlay
-                  className="truncate w-full font-medium"
-                  href={file.URL}
-                  color="neutral"
-                >
-                  <Typography
-                    level="title-md"
-                    className="truncate w-full"
-                    fontSize={""}
-                    //textColor="#fff"
-                  >
-                    {file.Name}
-                  </Typography>
-                </Link>
-              </Tooltip>
-              <Typography level="body-sm" color="neutral">
-                {getFileSize(file.Size)}
-              </Typography>
-            </CardContent>
-          </Card>
-        );
-      })}
-    </Box>
-  ); */
-
   return (
     <Grid container spacing={2} sx={{ margin: "10px 20px" }}>
       {files.map((file) => {
@@ -155,7 +106,7 @@ export const FileList = () => {
                 </AspectRatio>
               </CardOverflow>
               <CardContent
-                className=" flex-col items-start justify-end pt-5 -m-2"
+                className=" flex-col items-start justify-end pt-5 -m-2 text-left"
                 sx={{ rowGap: 0 }}
               >
                 <Tooltip title={file.Name}>
