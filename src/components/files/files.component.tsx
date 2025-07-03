@@ -80,7 +80,7 @@ const Files = () => {
           tabIndex={-1}
           variant="outlined"
           color="neutral"
-          className="w-24 h-5 md:w-48 md:h-16"
+          className="w-32 h-12 md:w-48 md:h-16"
           startDecorator={<CloudUploadOutlined fontSize="medium" />}
         >
           <Typography
