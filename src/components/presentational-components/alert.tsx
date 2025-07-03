@@ -76,6 +76,7 @@ const AlertMessage = ({
           autoHideDuration={6000}
           onClose={(event, reason) => {
             if (reason === "clickaway") {
+              setShowAlert(false);
               return;
             }
           }}
