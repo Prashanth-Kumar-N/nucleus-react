@@ -142,8 +142,8 @@ export const FileList = () => {
     <Grid container spacing={2} sx={{ margin: "10px 20px" }}>
       {files.map((file) => {
         return (
-          <Grid xs={6} sm={6} md={4} lg={3} xl={2}>
-            <Card component="li" className=" m-3 min-h-20 md:min-h-36">
+          <Grid xs={6} sm={4} md={2} lg={2} xl={2}>
+            <Card component="li" className=" m-3 min-h-20">
               <CardOverflow>
                 <AspectRatio>
                   <img
