@@ -26,13 +26,13 @@ const Header = function () {
         >
           <img src="assets/header-logo.png" className="h-full w-24" />
           <Typography
-            level="h3"
+            level="h2"
             sx={{
-              color: "#42a5f5",
+              color: "#1565c0",
               fontStyle: "italic",
               fontFamily: "ABC Ginto Nord Unlicensed Trial",
               fontWeight: "500",
-              marginTop: "30px",
+              marginTop: "10px",
               marginLeft: "8px",
             }}
           >
