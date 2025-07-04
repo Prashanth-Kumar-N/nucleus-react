@@ -64,8 +64,11 @@ const AlertMessage = ({
           {...rest}
         >
           <div className="flex flex-col items-start ml-6 ">
-            <div>{titleText}</div>
-            <Typography level="body-sm" sx={{ textAlign: "left" }}>
+            <div className="text-start">{titleText}</div>
+            <Typography
+              level="body-sm"
+              sx={{ textAlign: "left", wordBreak: "break-all" }}
+            >
               {description}
             </Typography>
           </div>

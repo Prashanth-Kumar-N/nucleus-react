@@ -24,12 +24,10 @@ import {
 } from "./files-list.component.tsx";
 import axios from "axios";
 import { useEffect, useState, type ChangeEvent } from "react";
-import { getAPIURL } from "../../utils/api-utils.ts";
+import { getAPIURLWithPath } from "../../utils/api-utils.ts";
 import AlertMessage, {
   AlertMessageProps,
 } from "../presentational-components/alert.tsx";
-
-const apiUrl = getAPIURL();
 
 interface UploadProgress {
   state: "idle" | "uploading" | "completed" | "error";
@@ -39,6 +37,12 @@ interface UploadProgress {
 export interface NotificationProps {
   type: "progress" | "alert";
   data: UploadProgress | AlertMessageProps;
+}
+
+export interface FileType {
+  Size: number;
+  Name: string;
+  URL: string;
 }
 
 const NotificationContent = (props: NotificationProps | null) => {
@@ -96,9 +100,51 @@ const notificationContentData = {
 };
 
 const Files = () => {
+  const [files, setFiles] = useState<FileType[]>([]);
+  const [actionPending, setPending] = useState<boolean>(true);
   const [showAlert, setShowAlert] = useState(true);
   const [notificationProps, setNotification] =
     useState<NotificationProps | null>(null);
+
+  const fetchFiles = async () => {
+    setPending(true);
+    // Fetching all files from the API
+    try {
+      const filesData = await axios.get<FileType[]>(
+        `${getAPIURLWithPath("getAllFiles")}`
+      );
+      if (filesData.status !== 200) {
+        throw new Error("Failed to fetch files");
+      }
+
+      if (filesData.data) {
+        filesData.data.shift();
+        setFiles(filesData.data);
+      } else {
+        setFiles([]);
+      }
+      setPending(false);
+    } catch (error) {
+      console.error("Error fetching files:", error);
+      setPending(false);
+      setNotification({
+        type: "alert",
+        data: {
+          alertType: "danger",
+          description: "Failed to fetch files",
+        },
+      });
+      throw error;
+    }
+  };
+
+  const fileDeletedCb = (fileName: string) => {
+    setFiles((prevFiles) => prevFiles.filter((file) => file.Name !== fileName));
+  };
+
+  useEffect(() => {
+    fetchFiles();
+  }, []);
 
   const fileSelected = async (e: ChangeEvent) => {
     const files = (e.target as HTMLInputElement)?.files;
@@ -113,20 +159,24 @@ const Files = () => {
           type: "progress",
           data: { state: "uploading", value: 0 },
         });
-        const response = await axios.post(`${apiUrl}/upload-file`, formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          onUploadProgress: ({ loaded, total }) => {
-            setNotification({
-              type: "progress",
-              data: {
-                state: "uploading",
-                value: Math.round((loaded * 100) / (total || 1)),
-              },
-            });
-          },
-        });
+        const response = await axios.post(
+          `${getAPIURLWithPath("uploadFile")}`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+            onUploadProgress: ({ loaded, total }) => {
+              setNotification({
+                type: "progress",
+                data: {
+                  state: "uploading",
+                  value: Math.round((loaded * 100) / (total || 1)),
+                },
+              });
+            },
+          }
+        );
 
         // throw error if the response is not 200
         if (response.status !== 200) {
@@ -139,6 +189,7 @@ const Files = () => {
               description: "File uploaded successfully!",
             },
           });
+          fetchFiles();
         }
       } catch (error) {
         setNotification({
@@ -157,7 +208,7 @@ const Files = () => {
   };
 
   useEffect(() => {
-    axios.get(`${apiUrl}/max-file-size`).then((res) => {
+    axios.get(`${getAPIURLWithPath("maxFileSize")}`).then((res) => {
       sessionStorage.setItem("maxFileSize", res.data.maxFileSize);
     });
   }, []);
@@ -235,7 +286,12 @@ const Files = () => {
         Files
       </Divider>
       <section className={`m-4 overflow-y-auto flex-grow`}>
-        <FileList setNotification={setNotification} />
+        <FileList
+          files={files}
+          pending={actionPending}
+          setNotification={setNotification}
+          fileDeletedCb={fileDeletedCb}
+        />
       </section>
     </section>
   );
