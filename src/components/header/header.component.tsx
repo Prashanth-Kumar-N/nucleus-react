@@ -40,7 +40,6 @@ const Header = function () {
           </Typography>
         </CardContent>
       </Card>
-      <Outlet />
     </section>
   );
 };

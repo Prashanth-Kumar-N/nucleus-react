@@ -7,11 +7,13 @@ import Header from "./components/header/header.component";
 
 function App() {
   return (
-    <div className="App">
+    <div className="App h-[100vh]">
       <Header />
-      <Routes>
-        <Route path="/" element={<Files />}></Route>
-      </Routes>
+      <section className="h-[calc(100vh-100px)] overflow-y-auto">
+        <Routes>
+          <Route path="/" element={<Files />}></Route>
+        </Routes>
+      </section>
     </div>
   );
 }

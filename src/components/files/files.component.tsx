@@ -17,7 +17,11 @@ import {
   Report as ReportIcon,
   Info as InfoIcon,
 } from "@mui/icons-material";
-import { FileList } from "./files-list.component.tsx";
+import {
+  FileList,
+  FilesLoading,
+  NoFilesFound,
+} from "./files-list.component.tsx";
 import axios from "axios";
 import { useEffect, useState, type ChangeEvent } from "react";
 import { getAPIURL } from "../../utils/api-utils.ts";
@@ -32,7 +36,7 @@ interface UploadProgress {
   value: number;
 }
 
-interface NotificationProps {
+export interface NotificationProps {
   type: "progress" | "alert";
   data: UploadProgress | AlertMessageProps;
 }
@@ -73,7 +77,7 @@ const NotificationContent = (props: NotificationProps | null) => {
   if (type === "alert") {
     return (
       <>
-        <div className="w-1/4 ml-32 md:ml-40 min-w-sm">
+        <div className="w-1/3 ml-32 md:ml-40 min-w-sm">
           <AlertMessage {...(data as AlertMessageProps)} />
         </div>
       </>
@@ -159,7 +163,7 @@ const Files = () => {
   }, []);
 
   return (
-    <section className="flex flex-col">
+    <section className="flex flex-col h-full">
       <section className="flex justify-center">
         {showAlert && (
           <Alert
@@ -230,8 +234,8 @@ const Files = () => {
       >
         Files
       </Divider>
-      <section className="files-list-ctr">
-        <FileList />
+      <section className={`m-4 overflow-y-auto flex-grow`}>
+        <FileList setNotification={setNotification} />
       </section>
     </section>
   );

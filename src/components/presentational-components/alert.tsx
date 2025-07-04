@@ -49,7 +49,8 @@ const AlertMessage = ({
             fontSize: "12px",
             fontWeight: "400",
             flexDirection: "row",
-            alignItems: "flex-start",
+            alignItems: "center",
+            justifyContent: "flex-center",
           }}
           endDecorator={
             <IconButton

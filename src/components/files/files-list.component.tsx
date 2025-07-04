@@ -7,12 +7,37 @@ import {
   AspectRatio,
   Typography,
   CardContent,
-  CardCover,
   Box,
   Link,
   Tooltip,
   Grid,
+  CircularProgress,
 } from "@mui/joy";
+
+import { DescriptionOutlined } from "@mui/icons-material";
+import { NotificationProps } from "./files.component";
+
+export const NoFilesFound = () => {
+  return (
+    <Box className="flex flex-col gap-5 justify-center items-center h-full bg-gray-100 rounded-2xl font-medium">
+      <DescriptionOutlined sx={{ fontSize: "42px", color: "#757575" }} />
+      <Typography level="body-lg" sx={{ color: "#757575" }}>
+        Files you upload will appear here.
+      </Typography>
+    </Box>
+  );
+};
+
+export const FilesLoading = () => {
+  return (
+    <Box className="flex flex-col gap-5 justify-center items-center h-full bg-gray-100 rounded-2xl font-medium">
+      <CircularProgress size="lg" color="primary" variant="plain" />
+      <Typography level="body-lg" sx={{ color: "#757575" }}>
+        Fetching files...
+      </Typography>
+    </Box>
+  );
+};
 
 interface File {
   Size: number;
@@ -20,25 +45,46 @@ interface File {
   URL: string;
 }
 
-export const FileList = () => {
+export const FileList = ({
+  setNotification,
+}: {
+  setNotification: (notification: NotificationProps) => void;
+}) => {
   const [files, setFiles] = useState<File[]>([]);
-  console.log(process.env);
+  const [actionPending, setPending] = useState<boolean>(true);
+
   const fetchFiles = async () => {
-    return axios.get<File[]>(`${getAPIURL()}/get-all-files`);
+    setPending(true);
+    // Fetching all files from the API
+    try {
+      const filesData = await axios.get<File[]>(`${getAPIURL()}/get-all-files`);
+      if (filesData.status !== 200) {
+        throw new Error("Failed to fetch files");
+      }
+
+      if (filesData.data) {
+        filesData.data.shift();
+        setFiles(filesData.data);
+      } else {
+        setFiles([]);
+      }
+      setPending(false);
+    } catch (error) {
+      console.error("Error fetching files:", error);
+      setPending(false);
+      setNotification({
+        type: "alert",
+        data: {
+          alertType: "danger",
+          description: "Failed to fetch files",
+        },
+      });
+      throw error;
+    }
   };
 
   useEffect(() => {
-    fetchFiles()
-      .then((res) => {
-        if (res.data) {
-          // the first object is just the folder name
-          res.data.shift();
-          setFiles(res.data);
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-      });
+    fetchFiles();
   }, []);
 
   // getting image to show in card according to file type
@@ -82,11 +128,11 @@ export const FileList = () => {
   };
 
   if (files.length === 0) {
-    return (
-      <Box className="flex justify-center items-center h-full">
-        <Typography level="body-lg">No files found</Typography>
-      </Box>
-    );
+    return <NoFilesFound />;
+  }
+
+  if (actionPending) {
+    return <FilesLoading />;
   }
 
   return (
