@@ -31,12 +31,15 @@ export const FileList = ({
   setNotification,
   files = [],
   pending = false,
-  fileDeletedCb,
+  actionsCb,
 }: {
   setNotification: (notification: NotificationProps) => void;
   files?: FileType[];
   pending?: boolean;
-  fileDeletedCb?: (fileName: string) => void;
+  actionsCb: {
+    fileDeletedCb?: (fileName: string) => void;
+    fileRenamedCb?: (oldName: string, newName: string) => void;
+  };
 }) => {
   if (files.length === 0) {
     return <NoFilesFound />;
@@ -53,7 +56,7 @@ export const FileList = ({
           key={file.Name}
           file={file}
           setNotification={setNotification}
-          fileDeletedCb={fileDeletedCb}
+          actionsCb={actionsCb}
         />
       ))}
     </Grid>

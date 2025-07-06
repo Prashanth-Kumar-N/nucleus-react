@@ -3,6 +3,7 @@ const apiPaths = {
   getAllFiles: "/files/get-all-files",
   maxFileSize: "/files/max-file-size",
   uploadFile: "/files/upload-file",
+  renameFile: "/files/rename-file"
 };
 
 

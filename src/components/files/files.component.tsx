@@ -142,6 +142,16 @@ const Files = () => {
     setFiles((prevFiles) => prevFiles.filter((file) => file.Name !== fileName));
   };
 
+  const fileRenamedCb = (oldName: string, newName: string) => {
+    setFiles((prevFiles) => {
+      return prevFiles.map((file) => {
+        if (file.Name !== oldName) return file;
+        file.Name = newName;
+        return { ...file };
+      });
+    });
+  };
+
   useEffect(() => {
     fetchFiles();
   }, []);
@@ -290,7 +300,7 @@ const Files = () => {
           files={files}
           pending={actionPending}
           setNotification={setNotification}
-          fileDeletedCb={fileDeletedCb}
+          actionsCb={{ fileDeletedCb, fileRenamedCb }}
         />
       </section>
     </section>
