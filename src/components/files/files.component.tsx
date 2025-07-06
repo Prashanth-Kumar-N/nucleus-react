@@ -8,14 +8,13 @@ import {
   Divider,
   LinearProgress,
   Snackbar,
+  Tooltip,
 } from "@mui/joy";
 import {
   CloseRounded,
   Info,
-  CheckCircle as CheckCircleIcon,
-  Warning as WarningIcon,
-  Report as ReportIcon,
-  Info as InfoIcon,
+  ListOutlined,
+  CalendarViewMonthOutlined,
 } from "@mui/icons-material";
 import {
   FileList,
@@ -43,6 +42,7 @@ export interface FileType {
   Size: number;
   Name: string;
   URL: string;
+  LastModified?: string;
 }
 
 const NotificationContent = (props: NotificationProps | null) => {
@@ -81,7 +81,7 @@ const NotificationContent = (props: NotificationProps | null) => {
   if (type === "alert") {
     return (
       <>
-        <div className="w-1/3 ml-32 md:ml-40 min-w-sm">
+        <div className="w-2/5 ml-36 md:ml-44 min-w-sm">
           <AlertMessage {...(data as AlertMessageProps)} />
         </div>
       </>
@@ -104,7 +104,10 @@ const Files = () => {
   const [actionPending, setPending] = useState<boolean>(true);
   const [showAlert, setShowAlert] = useState(true);
   const [notificationProps, setNotification] =
-    useState<NotificationProps | null>(null);
+    useState<NotificationProps | null>(
+      notificationContentData as NotificationProps
+    );
+  const [filesRenderType, setRenderType] = useState<"list" | "grid">("grid");
 
   const fetchFiles = async () => {
     setPending(true);
@@ -153,6 +156,9 @@ const Files = () => {
   };
 
   useEffect(() => {
+    axios.get(`${getAPIURLWithPath("maxFileSize")}`).then((res) => {
+      sessionStorage.setItem("maxFileSize", res.data.maxFileSize);
+    });
     fetchFiles();
   }, []);
 
@@ -217,11 +223,9 @@ const Files = () => {
     }
   };
 
-  useEffect(() => {
-    axios.get(`${getAPIURLWithPath("maxFileSize")}`).then((res) => {
-      sessionStorage.setItem("maxFileSize", res.data.maxFileSize);
-    });
-  }, []);
+  const changeRenderType = () => {
+    setRenderType((prevValue) => (prevValue === "list" ? "grid" : "list"));
+  };
 
   return (
     <section className="flex flex-col h-full">
@@ -257,6 +261,21 @@ const Files = () => {
           <NotificationContent {...(notificationProps as NotificationProps)} />
         </section>
         <section className="">
+          <IconButton
+            color="neutral"
+            sx={{ marginRight: 2 }}
+            onClick={changeRenderType}
+          >
+            {filesRenderType === "grid" ? (
+              <Tooltip title="Show List view">
+                <ListOutlined />
+              </Tooltip>
+            ) : (
+              <Tooltip title="Show Grid view">
+                <CalendarViewMonthOutlined />
+              </Tooltip>
+            )}
+          </IconButton>
           <Button
             component="label"
             role={undefined}
@@ -300,6 +319,7 @@ const Files = () => {
           files={files}
           pending={actionPending}
           setNotification={setNotification}
+          filesRenderType={filesRenderType}
           actionsCb={{ fileDeletedCb, fileRenamedCb }}
         />
       </section>

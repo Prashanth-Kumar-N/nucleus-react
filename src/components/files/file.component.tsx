@@ -25,14 +25,14 @@ import { NotificationProps } from "./files.component";
 import { useState } from "react";
 
 // getting image to show in card according to file type
-const getFileImage = (fileName: string) => {
+const getFileImage = (fileName: string, file: FileType) => {
   const fileExtension = fileName.split(".").pop()?.toLowerCase();
   switch (fileExtension) {
     case "jpg":
     case "jpeg":
     case "png":
     case "gif":
-      return "assets/image-file.jpg"; // Placeholder for image files
+      return file.URL; //"assets/image-file.jpg"; // Placeholder for image files
     case "pdf":
       return "assets/pdf-file.png"; // Placeholder for PDF files
     case "txt":
@@ -73,7 +73,7 @@ interface FileComponentProps {
   };
 }
 
-export const FileComponent = ({
+export const FileGridComponent = ({
   file,
   setNotification,
   actionsCb,
@@ -165,12 +165,7 @@ export const FileComponent = ({
         >
           <CardOverflow>
             <AspectRatio>
-              <img
-                src={getFileImage(file.Name)}
-                srcSet={getFileImage(file.Name)}
-                loading="lazy"
-                alt=""
-              />
+              <img src={getFileImage(file.Name, file)} loading="lazy" alt="" />
             </AspectRatio>
           </CardOverflow>
           <CardContent

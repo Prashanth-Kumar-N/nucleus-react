@@ -3,7 +3,19 @@ import type { FileType } from "./files.component";
 
 import { DescriptionOutlined } from "@mui/icons-material";
 import { NotificationProps } from "./files.component";
-import { FileComponent } from "./file.component";
+import { FileGridComponent } from "./file.component";
+import { FilesTableComponent } from "./files-table.component";
+
+interface FilesListProps {
+  setNotification: (notification: NotificationProps) => void;
+  files: FileType[];
+  pending?: boolean;
+  filesRenderType: "list" | "grid";
+  actionsCb: {
+    fileDeletedCb?: (fileName: string) => void;
+    fileRenamedCb?: (oldName: string, newName: string) => void;
+  };
+}
 
 export const NoFilesFound = () => {
   return (
@@ -27,32 +39,17 @@ export const FilesLoading = () => {
   );
 };
 
-export const FileList = ({
+export const FilesGrid = ({
   setNotification,
   files = [],
   pending = false,
+  filesRenderType,
   actionsCb,
-}: {
-  setNotification: (notification: NotificationProps) => void;
-  files?: FileType[];
-  pending?: boolean;
-  actionsCb: {
-    fileDeletedCb?: (fileName: string) => void;
-    fileRenamedCb?: (oldName: string, newName: string) => void;
-  };
-}) => {
-  if (files.length === 0) {
-    return <NoFilesFound />;
-  }
-
-  if (pending) {
-    return <FilesLoading />;
-  }
-
+}: FilesListProps) => {
   return (
     <Grid container spacing={2} sx={{ margin: "10px 20px" }}>
       {files.map((file) => (
-        <FileComponent
+        <FileGridComponent
           key={file.Name}
           file={file}
           setNotification={setNotification}
@@ -60,5 +57,33 @@ export const FileList = ({
         />
       ))}
     </Grid>
+  );
+};
+
+export const FilesTable = ({
+  setNotification,
+  files = [],
+  pending = false,
+  filesRenderType,
+  actionsCb,
+}: FilesListProps) => {};
+
+export const FileList = (props: FilesListProps) => {
+  if (props.files?.length === 0) {
+    return <NoFilesFound />;
+  }
+
+  if (props.pending) {
+    return <FilesLoading />;
+  }
+
+  return (
+    <>
+      {props.filesRenderType === "list" ? (
+        <FilesTableComponent {...props} />
+      ) : (
+        <FilesGrid {...props} />
+      )}
+    </>
   );
 };
