@@ -1,18 +1,4 @@
-import { useState } from "react";
-import {
-  Button,
-  Sheet,
-  Table,
-  Tooltip,
-  Link,
-  Modal,
-  ModalDialog,
-  DialogTitle,
-  DialogContent,
-  Input,
-  Stack,
-  ModalClose,
-} from "@mui/joy";
+import { Button, Sheet, Table, Tooltip, Link } from "@mui/joy";
 import { DriveFileRenameOutline, DeleteOutline } from "@mui/icons-material";
 import type { FilesTableComponentProps, FileType } from "./files.types";
 
@@ -23,8 +9,6 @@ export const FilesTableComponent = ({
   actions,
 }: FilesTableComponentProps) => {
   //files = [...files, ...files, ...files, ...files, ...files, ...files];
-  const [showRenameModal, setShowRenameModal] = useState<boolean>(false);
-  const [renameValue, setRenameValue] = useState<string>("");
 
   // table columns array
   const columns = [
@@ -52,24 +36,33 @@ export const FilesTableComponent = ({
           }}
         >
           <thead>
-            {columns.map(({ title }) => (
-              <th style={{ backgroundColor: "#f0f4f8" }}>{title}</th>
-            ))}
-            <th style={{ backgroundColor: "#f0f4f8" }}></th>
+            <tr>
+              {columns.map(({ title }) => (
+                <th style={{ backgroundColor: "#f0f4f8" }} key={title}>
+                  {title}
+                </th>
+              ))}
+              <th style={{ backgroundColor: "#f0f4f8" }} key="actions-th"></th>
+            </tr>
           </thead>
           <tbody style={{ cursor: "pointer" }}>
             {files.map((file) => (
-              <tr>
-                {columns.map(({ key }) => {
+              <tr key={file.Name}>
+                {columns.map(({ key }, i) => {
                   if (key === "Name")
                     return (
-                      <td>
+                      <td key={file.Name}>
                         <Link className="truncate w-full" href={file.URL}>
                           {file.Name}
                         </Link>
                       </td>
                     );
-                  if (key) return <td>{file[key as keyof FileType]}</td>;
+                  if (key)
+                    return (
+                      <td key={`${file.Name}-${i}`}>
+                        {file[key as keyof FileType]}
+                      </td>
+                    );
                 })}
                 <td>
                   <Tooltip title="Rename">

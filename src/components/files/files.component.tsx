@@ -1,13 +1,11 @@
 import { CloudUploadOutlined } from "@mui/icons-material";
 import {
-  Input,
   Button,
   Alert,
   IconButton,
   Typography,
   Divider,
   LinearProgress,
-  Snackbar,
   Tooltip,
 } from "@mui/joy";
 import {
@@ -16,19 +14,22 @@ import {
   ListOutlined,
   CalendarViewMonthOutlined,
 } from "@mui/icons-material";
-import {
-  FileList,
-  FilesLoading,
-  NoFilesFound,
-} from "./files-list.component.tsx";
+import { FileList } from "./files-list.component.tsx";
 import axios from "axios";
 import { useEffect, useState, type ChangeEvent } from "react";
 import { getAPIURLWithPath } from "../../utils/api-utils.ts";
 import AlertMessage, {
   AlertMessageProps,
 } from "../presentational-components/alert.tsx";
+import { useAppSelector as useSelector } from "../../redux/store.ts";
+import {
+  selectRenderType,
+  changeRenderType,
+  fetchFilesAction,
+} from "../../redux/files/slice.ts";
+import { useAppDispatch as useDispatch } from "../../redux/store.ts";
 
-import { UploadProgress, NotificationProps, FileType } from "./files.types.ts";
+import { UploadProgress, NotificationProps } from "./files.types.ts";
 
 const NotificationContent = (props: NotificationProps | null) => {
   if (!props) return null;
@@ -85,64 +86,17 @@ const notificationContentData = {
 };
 
 const Files = () => {
-  const [files, setFiles] = useState<FileType[]>([]);
-  const [actionPending, setPending] = useState<boolean>(true);
   const [showAlert, setShowAlert] = useState(true);
   const [notificationProps, setNotification] =
     useState<NotificationProps | null>(null);
-  const [filesRenderType, setRenderType] = useState<"list" | "grid">("list");
+  const dispatch = useDispatch();
 
-  const fetchFiles = async () => {
-    setPending(true);
-    // Fetching all files from the API
-    try {
-      const filesData = await axios.get<FileType[]>(
-        `${getAPIURLWithPath("getAllFiles")}`
-      );
-      if (filesData.status !== 200) {
-        throw new Error("Failed to fetch files");
-      }
-
-      if (filesData.data) {
-        filesData.data.shift();
-        setFiles(filesData.data);
-      } else {
-        setFiles([]);
-      }
-      setPending(false);
-    } catch (error) {
-      console.error("Error fetching files:", error);
-      setPending(false);
-      setNotification({
-        type: "alert",
-        data: {
-          alertType: "danger",
-          description: "Failed to fetch files",
-        },
-      });
-      throw error;
-    }
-  };
-
-  const fileDeletedCb = (fileName: string) => {
-    setFiles((prevFiles) => prevFiles.filter((file) => file.Name !== fileName));
-  };
-
-  const fileRenamedCb = (oldName: string, newName: string) => {
-    setFiles((prevFiles) => {
-      return prevFiles.map((file) => {
-        if (file.Name !== oldName) return file;
-        file.Name = newName;
-        return { ...file };
-      });
-    });
-  };
+  const filesRenderType = useSelector(selectRenderType);
 
   useEffect(() => {
     axios.get(`${getAPIURLWithPath("maxFileSize")}`).then((res) => {
       sessionStorage.setItem("maxFileSize", res.data.maxFileSize);
     });
-    fetchFiles();
   }, []);
 
   const fileSelected = async (e: ChangeEvent) => {
@@ -187,7 +141,7 @@ const Files = () => {
               description: "File uploaded successfully!",
             },
           });
-          fetchFiles();
+          dispatch(fetchFilesAction(""));
         }
       } catch (error) {
         setNotification({
@@ -203,10 +157,6 @@ const Files = () => {
         console.error("Error uploading file:", error);
       }
     }
-  };
-
-  const changeRenderType = () => {
-    setRenderType((prevValue) => (prevValue === "list" ? "grid" : "list"));
   };
 
   return (
@@ -246,7 +196,11 @@ const Files = () => {
           <IconButton
             color="neutral"
             sx={{ marginRight: 2 }}
-            onClick={changeRenderType}
+            onClick={() =>
+              dispatch(
+                changeRenderType(filesRenderType === "grid" ? "list" : "grid")
+              )
+            }
           >
             {filesRenderType === "grid" ? (
               <Tooltip title="Show List view">
@@ -297,13 +251,7 @@ const Files = () => {
         Files
       </Divider>
       <section className={`m-4 flex-grow`}>
-        <FileList
-          files={files}
-          pending={actionPending}
-          setNotification={setNotification}
-          filesRenderType={filesRenderType}
-          actionsCb={{ fileDeletedCb, fileRenamedCb }}
-        />
+        <FileList setNotification={setNotification} />
       </section>
     </section>
   );

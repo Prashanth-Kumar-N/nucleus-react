@@ -20,14 +20,8 @@ export interface FileType {
 
 export interface FilesListProps {
   setNotification: (notification: NotificationProps) => void;
-  files: FileType[];
   totalSize?: string;
   pending?: boolean;
-  filesRenderType: "list" | "grid";
-  actionsCb: {
-    fileDeletedCb?: (fileName: string) => void;
-    fileRenamedCb?: (oldName: string, newName: string) => void;
-  };
 }
 
 export interface FilesGridComponentProps {
@@ -54,3 +48,7 @@ export interface ActionData {
   showModal: boolean;
   fileName: string;
 }
+
+export type ErrorTypeString = "fetchFiles" | "renameFile" | "deleteFile" | "";
+
+export type APIStatus = "idle" | "pending" | "success" | "error";

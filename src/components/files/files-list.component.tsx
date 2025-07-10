@@ -1,8 +1,7 @@
-import { useMemo, useState, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
   Typography,
   Box,
-  Grid,
   CircularProgress,
   Modal,
   ModalDialog,
@@ -13,12 +12,28 @@ import {
   Stack,
   ModalClose,
 } from "@mui/joy";
-import axios from "axios";
 import { DescriptionOutlined } from "@mui/icons-material";
 import { FilesGridComponent } from "./files-grid.component";
 import { FilesTableComponent } from "./files-table.component";
-import { getAPIURLWithPath } from "../../utils/api-utils";
-import type { FilesListProps, FileType, ActionData } from "./files.types";
+import type {
+  FilesListProps,
+  FileType,
+  ActionData,
+  ErrorTypeString,
+} from "./files.types";
+import {
+  selectFiles,
+  selectRenderType,
+  fetchFilesAction,
+  selectFetchingFilesState,
+  selectFetchingError,
+  renameFileAction,
+  deleteFileAction,
+} from "../../redux/files/slice";
+import {
+  useAppSelector as useSelector,
+  useAppDispatch as useDispatch,
+} from "../../redux/store";
 
 // getting the string for file size in Bytes, KB and MB
 // if the size is not a number, return "Unknown Size"
@@ -47,10 +62,15 @@ const getFileSize = (size: number): string => {
 const addFileSize = (files: FileType[]) => {
   let totalSize: number = 0;
 
+  // removing the first element because it refers to a folder
+  // This is a root folder in the bucket for files, no need to show it
+  files.shift();
+
   files = files.map((file) => {
-    totalSize += file.Size;
-    file.formattedSize = getFileSize(file.Size);
-    return file;
+    const fileObj = { ...file };
+    totalSize += fileObj.Size;
+    fileObj.formattedSize = getFileSize(fileObj.Size);
+    return fileObj;
   });
 
   return { files, totalSize: getFileSize(totalSize) };
@@ -78,6 +98,18 @@ export const FilesLoading = () => {
   );
 };
 
+const getErrorMessage = (type: ErrorTypeString, fileName?: string) => {
+  switch (type) {
+    case "deleteFile":
+      return `Failed to delete file ${fileName}. Please try again.`;
+    case "renameFile":
+      return `Failed to rename file ${fileName}. Please try again.`;
+    case "fetchFiles":
+    default:
+      return "Error fetching files. Please try again.";
+  }
+};
+
 export const FileList = (props: FilesListProps) => {
   const [renameFileData, setRenameData] = useState<ActionData>({
     showModal: false,
@@ -88,79 +120,17 @@ export const FileList = (props: FilesListProps) => {
     fileName: "",
   });
   const [renameValue, setRenameValue] = useState<string>("");
+  const filesRenderType = useSelector(selectRenderType);
+  const filesData = useSelector(selectFiles);
+  const fetchingFilesStatus = useSelector(selectFetchingFilesState);
+  const fetchingError = useSelector(selectFetchingError);
+  const dispatch = useDispatch();
 
-  // Function to delete the file
-  const deleteFile = useCallback(async (fileName: string) => {
-    // Implement the delete file logic here
-    // Call an API to delete the file from the server
-    const apiUrl = `${getAPIURLWithPath("deleteFile")}/${fileName}`;
-    try {
-      const response = await axios.delete(apiUrl);
-      if (response.status === 200) {
-        props.setNotification({
-          type: "alert",
-          data: {
-            alertType: "success",
-            description: `File ${fileName} deleted successfully.`,
-          },
-        });
-        props.actionsCb.fileDeletedCb?.(fileName); // Call the callback to update the file list
-      } else {
-        // If the response status is not 200, throw an error
-        throw new Error(`Failed to delete file ${fileName}`);
-      }
-    } catch (error) {
-      console.error("Error deleting file:", error);
-      props.setNotification({
-        type: "alert",
-        data: {
-          alertType: "danger",
-          title: `Failed to delete file ${fileName}. Please try again.`,
-          description: `Error: ${error}`,
-        },
-      });
-    }
+  // fetch files on load
+  useEffect(() => {
+    dispatch(fetchFilesAction(""));
   }, []);
 
-  const renameFile = useCallback(
-    async (fileName: string, renameValue: string) => {
-      const payload = { oldName: fileName, newName: renameValue };
-
-      try {
-        const apiURL = `${getAPIURLWithPath("renameFile")}`;
-        const response = await axios.post(apiURL, payload);
-        if (response.status === 200) {
-          props.setNotification({
-            type: "alert",
-            data: {
-              alertType: "success",
-              description: `File rename successful.`,
-            },
-          });
-          props.actionsCb.fileRenamedCb &&
-            props.actionsCb.fileRenamedCb(fileName, renameValue);
-          setRenameData({ ...renameFileData, showModal: false });
-        } else {
-          // If the response status is not 200, throw an error
-          throw new Error(`Failed to rename file ${fileName}`);
-        }
-      } catch (error) {
-        console.error("Error renaming file:", error);
-        props.setNotification({
-          type: "alert",
-          data: {
-            alertType: "danger",
-            title: `Failed to rename file ${fileName}. Please try again.`,
-            description: `Error: ${error}`,
-          },
-        });
-        setRenameData({ ...renameFileData, showModal: false });
-      }
-    },
-    []
-  );
-
-  //const deleteFile = (file)
   const actions = {
     setDeleteData,
     setRenameData: (data: ActionData) => {
@@ -169,19 +139,33 @@ export const FileList = (props: FilesListProps) => {
     },
   };
 
-  if (props.files?.length === 0) {
+  if (filesData?.length <= 1) {
     return <NoFilesFound />;
   }
 
-  if (props.pending) {
+  if (fetchingFilesStatus === "pending") {
     return <FilesLoading />;
   }
 
-  const { files, totalSize } = addFileSize(props.files);
+  if (fetchingFilesStatus === "error") {
+    console.error("API Error:", fetchingError);
+    props.setNotification({
+      type: "alert",
+      data: {
+        alertType: "danger",
+        description:
+          fetchingError?.error?.message ||
+          getErrorMessage(fetchingError.type, fetchingError.fileName || "") ||
+          "API Error",
+      },
+    });
+  }
+
+  const { files, totalSize } = addFileSize([...filesData]);
 
   return (
     <>
-      {props.filesRenderType === "list" ? (
+      {filesRenderType === "list" ? (
         <FilesTableComponent
           {...props}
           files={files}
@@ -208,7 +192,13 @@ export const FileList = (props: FilesListProps) => {
             <form
               onSubmit={(event) => {
                 event.preventDefault();
-                renameFile(renameFileData.fileName, renameValue);
+                dispatch(
+                  renameFileAction({
+                    oldName: renameFileData.fileName,
+                    newName: renameValue,
+                  })
+                );
+                setRenameData({ fileName: "", showModal: false });
               }}
             >
               <Stack spacing={2}>
@@ -260,7 +250,10 @@ export const FileList = (props: FilesListProps) => {
               <section className="flex flex-row gap-3">
                 <Button
                   variant="solid"
-                  onClick={() => deleteFile(deleteFileData.fileName)}
+                  onClick={() => {
+                    dispatch(deleteFileAction(deleteFileData.fileName));
+                    setDeleteData({ fileName: "", showModal: false });
+                  }}
                 >
                   Delete
                 </Button>
