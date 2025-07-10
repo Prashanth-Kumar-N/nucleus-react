@@ -28,22 +28,7 @@ import AlertMessage, {
   AlertMessageProps,
 } from "../presentational-components/alert.tsx";
 
-interface UploadProgress {
-  state: "idle" | "uploading" | "completed" | "error";
-  value: number;
-}
-
-export interface NotificationProps {
-  type: "progress" | "alert";
-  data: UploadProgress | AlertMessageProps;
-}
-
-export interface FileType {
-  Size: number;
-  Name: string;
-  URL: string;
-  LastModified?: string;
-}
+import { UploadProgress, NotificationProps, FileType } from "./files.types.ts";
 
 const NotificationContent = (props: NotificationProps | null) => {
   if (!props) return null;
@@ -104,10 +89,8 @@ const Files = () => {
   const [actionPending, setPending] = useState<boolean>(true);
   const [showAlert, setShowAlert] = useState(true);
   const [notificationProps, setNotification] =
-    useState<NotificationProps | null>(
-      notificationContentData as NotificationProps
-    );
-  const [filesRenderType, setRenderType] = useState<"list" | "grid">("grid");
+    useState<NotificationProps | null>(null);
+  const [filesRenderType, setRenderType] = useState<"list" | "grid">("list");
 
   const fetchFiles = async () => {
     setPending(true);
@@ -167,7 +150,6 @@ const Files = () => {
     const formData = new FormData();
 
     if (files) {
-      console.log("Files selected:", files);
       Array.from(files).forEach((file) => formData.append("file", file));
 
       try {
@@ -314,7 +296,7 @@ const Files = () => {
       >
         Files
       </Divider>
-      <section className={`m-4 overflow-y-auto flex-grow`}>
+      <section className={`m-4 flex-grow`}>
         <FileList
           files={files}
           pending={actionPending}
