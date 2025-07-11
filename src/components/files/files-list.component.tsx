@@ -27,8 +27,10 @@ import {
   fetchFilesAction,
   selectFetchingFilesState,
   selectFetchingError,
-  renameFileAction,
+  selectDeleteFileStatus,
+  selectRenameFileStatus,
   deleteFileAction,
+  renameFileAction,
 } from "../../redux/files/slice";
 import {
   useAppSelector as useSelector,
@@ -114,15 +116,19 @@ export const FileList = (props: FilesListProps) => {
   const [renameFileData, setRenameData] = useState<ActionData>({
     showModal: false,
     fileName: "",
+    lastActionCalled: false,
   });
   const [deleteFileData, setDeleteData] = useState<ActionData>({
     showModal: false,
     fileName: "",
+    lastActionCalled: false,
   });
   const [renameValue, setRenameValue] = useState<string>("");
   const filesRenderType = useSelector(selectRenderType);
   const filesData = useSelector(selectFiles);
   const fetchingFilesStatus = useSelector(selectFetchingFilesState);
+  const deletFileStatus = useSelector(selectDeleteFileStatus);
+  const renameFileStatus = useSelector(selectRenameFileStatus);
   const fetchingError = useSelector(selectFetchingError);
   const dispatch = useDispatch();
 
@@ -135,7 +141,7 @@ export const FileList = (props: FilesListProps) => {
     setDeleteData,
     setRenameData: (data: ActionData) => {
       setRenameValue(data.fileName);
-      setRenameData(data);
+      setRenameData({ ...renameFileData, ...data });
     },
   };
 
@@ -143,10 +149,41 @@ export const FileList = (props: FilesListProps) => {
     return <NoFilesFound />;
   }
 
-  if (fetchingFilesStatus === "pending") {
+  // show loading state
+  if (
+    [fetchingFilesStatus, deletFileStatus, renameFileStatus].includes("pending")
+  ) {
     return <FilesLoading />;
   }
 
+  //show success message
+  let successMessage = "";
+  let showSuccessNotification = false;
+  if (renameFileData.lastActionCalled && renameFileStatus === "success") {
+    showSuccessNotification = true;
+    successMessage = `File renamed to ${renameValue}`;
+  }
+  if (deleteFileData.lastActionCalled && deletFileStatus === "success") {
+    showSuccessNotification = true;
+    successMessage = "File deleteed.";
+  }
+
+  if (showSuccessNotification) {
+    props.setNotification({
+      type: "alert",
+      data: {
+        alertType: "success",
+        description: successMessage,
+      },
+    });
+
+    if (renameFileData.lastActionCalled)
+      setRenameData({ ...renameFileData, lastActionCalled: false });
+    if (deleteFileData.lastActionCalled)
+      setDeleteData({ ...deleteFileData, lastActionCalled: false });
+  }
+
+  // show error state
   if (fetchingFilesStatus === "error") {
     console.error("API Error:", fetchingError);
     props.setNotification({
@@ -183,7 +220,13 @@ export const FileList = (props: FilesListProps) => {
 
       <Modal
         open={renameFileData.showModal}
-        onClose={() => setRenameData({ fileName: "", showModal: false })}
+        onClose={() =>
+          setRenameData({
+            fileName: "",
+            showModal: false,
+            lastActionCalled: false,
+          })
+        }
       >
         <ModalDialog>
           <ModalClose />
@@ -198,7 +241,11 @@ export const FileList = (props: FilesListProps) => {
                     newName: renameValue,
                   })
                 );
-                setRenameData({ fileName: "", showModal: false });
+                setRenameData({
+                  fileName: "",
+                  showModal: false,
+                  lastActionCalled: true,
+                });
               }}
             >
               <Stack spacing={2}>
@@ -219,7 +266,11 @@ export const FileList = (props: FilesListProps) => {
                   <Button
                     variant="outlined"
                     onClick={() =>
-                      setRenameData({ fileName: "", showModal: false })
+                      setRenameData({
+                        fileName: "",
+                        showModal: false,
+                        lastActionCalled: false,
+                      })
                     }
                   >
                     Cancel
@@ -233,7 +284,13 @@ export const FileList = (props: FilesListProps) => {
 
       <Modal
         open={deleteFileData.showModal}
-        onClose={() => setDeleteData({ fileName: "", showModal: false })}
+        onClose={() =>
+          setDeleteData({
+            fileName: "",
+            showModal: false,
+            lastActionCalled: false,
+          })
+        }
       >
         <ModalDialog>
           <ModalClose />
@@ -252,7 +309,11 @@ export const FileList = (props: FilesListProps) => {
                   variant="solid"
                   onClick={() => {
                     dispatch(deleteFileAction(deleteFileData.fileName));
-                    setDeleteData({ fileName: "", showModal: false });
+                    setDeleteData({
+                      fileName: "",
+                      showModal: false,
+                      lastActionCalled: true,
+                    });
                   }}
                 >
                   Delete
@@ -260,7 +321,11 @@ export const FileList = (props: FilesListProps) => {
                 <Button
                   variant="outlined"
                   onClick={() =>
-                    setDeleteData({ fileName: "", showModal: false })
+                    setDeleteData({
+                      fileName: "",
+                      showModal: false,
+                      lastActionCalled: false,
+                    })
                   }
                 >
                   Cancel

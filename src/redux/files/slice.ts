@@ -82,7 +82,9 @@ const filesSlice = createSlice({
       })
       .addCase(deleteFileThunkAction.fulfilled, (state, action) => {
         state.deleteFileStatus = "success";
-        state.files.filter(({ Name }) => Name !== action.meta.arg);
+        state.files = state.files.filter(
+          ({ Name }) => Name !== action.meta.arg
+        );
       })
       .addCase(deleteFileThunkAction.pending, (state, action) => {
         state.deleteFileStatus = "pending";
@@ -123,6 +125,7 @@ export const {
   selectFetchingFilesState,
   selectFetchingError,
   selectDeleteFileStatus,
+  selectRenameFileStatus,
 } = filesSlice.selectors;
 export const fetchFilesAction = fetchFiles;
 export const deleteFileAction = deleteFileThunkAction;

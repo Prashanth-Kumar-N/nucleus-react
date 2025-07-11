@@ -47,6 +47,7 @@ export interface FilesTableComponentProps {
 export interface ActionData {
   showModal: boolean;
   fileName: string;
+  lastActionCalled?: boolean;
 }
 
 export type ErrorTypeString = "fetchFiles" | "renameFile" | "deleteFile" | "";
