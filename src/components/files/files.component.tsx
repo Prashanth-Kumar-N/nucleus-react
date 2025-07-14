@@ -30,6 +30,8 @@ import {
 import { useAppDispatch as useDispatch } from "../../redux/store.ts";
 
 import { UploadProgress, NotificationProps } from "./files.types.ts";
+import { selectAuthentication } from "../../redux/login/slice.ts";
+import { Navigate } from "react-router";
 
 const NotificationContent = (props: NotificationProps | null) => {
   if (!props) return null;
@@ -91,13 +93,20 @@ const Files = () => {
     useState<NotificationProps | null>(null);
   const dispatch = useDispatch();
 
+  const isAuthenticated = useSelector(selectAuthentication);
   const filesRenderType = useSelector(selectRenderType);
 
   useEffect(() => {
-    axios.get(`${getAPIURLWithPath("maxFileSize")}`).then((res) => {
-      sessionStorage.setItem("maxFileSize", res.data.maxFileSize);
-    });
+    if (isAuthenticated) {
+      axios.get(`${getAPIURLWithPath("maxFileSize")}`).then((res) => {
+        sessionStorage.setItem("maxFileSize", res.data.maxFileSize);
+      });
+    }
   }, []);
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
 
   const fileSelected = async (e: ChangeEvent) => {
     const files = (e.target as HTMLInputElement)?.files;

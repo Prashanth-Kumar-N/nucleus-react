@@ -25,7 +25,7 @@ interface FilesState {
 }
 
 const initialState: FilesState = {
-  filesRenderType: "list",
+  filesRenderType: "grid",
   files: [],
   fetchingFileState: "idle",
   fetchingError: { type: "", error: null },

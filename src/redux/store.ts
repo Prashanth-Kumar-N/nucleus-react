@@ -1,10 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
 import FilesReducer from "./files/slice";
+import LoginReducer from "./login/slice";
 import { useDispatch, useSelector } from "react-redux";
 
 const store = configureStore({
   reducer: {
     files: FilesReducer,
+    login: LoginReducer,
   },
 });
 
