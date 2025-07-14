@@ -17,7 +17,6 @@ const Login = () => {
 
   if (isAuthenticated) {
     navigate("/files");
-    return null;
   }
 
   const inputChanged = (value: string | number, index: number) => {
