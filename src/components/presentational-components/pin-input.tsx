@@ -79,6 +79,7 @@ export const PinInput = (props: PinInputProps) => {
           type={props.mask ? "password" : "number"}
           autoFocus={props.autoFocus && idx === 0 ? true : false}
           autoComplete="new-password"
+          maxLength={1}
           ref={(element) => {
             if (element) {
               inputRefs.current[idx] = element;
